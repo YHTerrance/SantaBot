@@ -1,0 +1,25 @@
+{
+  "name": "santa-bot",
+  "version": "1.0.0",
+  "description": "An open-source NodeJS bot designed to reward engagement directly on Farcaster.",
+  "main": "dist/app.js",
+  "repository": "",
+  "author": "yhterrance <terranceyuhao@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "tsc-watch --skipLibCheck --onSuccess 'node dist/app.js'",
+    "build": "tsc --skipLibCheck",
+    "prettier": "prettier --config .prettierrc '*/**/*.{js,ts}' --write",
+    "lint": "yarn prettier && eslint --max-warnings 0 --ext ts,tsx,json src"
+  },
+  "dependencies": {
+    "@neynar/nodejs-sdk": "^1.13.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "prettier": "^3.2.5",
+    "tsc-watch": "^6.0.4"
+  },
+  "packageManager": "yarn@3.3.1"
+}
