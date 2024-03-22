@@ -1,6 +1,6 @@
 import { kv } from '@vercel/kv'
-import { NextResponse } from 'next/server';
-import { saveDraw } from '../actions';
+import { NextResponse } from 'next/server'
+import { saveDraw } from '../actions'
 
 /*
 export async function POST() {
@@ -30,7 +30,8 @@ export async function POST() {
 */
 
 export async function GET() {
-  const user = await kv.hgetall('draw:0x7c7467075a5a7f0cd1f3945668c9577336a13e8d');
-  return NextResponse.json(user);
+  const user = await kv.hgetall(
+    'draw:0x7c7467075a5a7f0cd1f3945668c9577336a13e8d'
+  )
+  return NextResponse.json(user)
 }
-
