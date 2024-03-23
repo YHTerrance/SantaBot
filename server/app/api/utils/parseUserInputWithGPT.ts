@@ -55,7 +55,8 @@ Only respond with the JSON object containing the structured information. Do not 
     `
 
   const response = await openAIClient.chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-3.5-turbo',
+    response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

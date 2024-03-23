@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     const timestamp = res.data.timestamp
 
     if (processedRequests.has(castHash)) {
+      console.log('Request already processed')
       return new Response('Request already processed', { status: 200 })
     }
 
@@ -39,12 +40,20 @@ export async function POST(request: Request) {
 
     // parse the user input with GPT
     const parsedResponse = await parseUserInputWithGPT(text)
+    console.log(parsedResponse)
+
     if (parsedResponse === null) {
       console.log('Failed to parse response')
       return new Response('Failed to parse response', { status: 500 })
     }
 
-    const parsedResponseObj = JSON.parse(parsedResponse)
+    let parsedResponseObj
+    try {
+      parsedResponseObj = JSON.parse(parsedResponse)
+    } catch (error) {
+      console.error('Failed to parse JSON:', error)
+      return new Response('Internal Server Error', { status: 500 })
+    }
 
     console.log('Parsed response object:', parsedResponseObj)
 
