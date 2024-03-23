@@ -1,12 +1,12 @@
-
-/*
-import { NextRequest, NextResponse } from 'next/server'
+import { NextApiResponse } from 'next'
+import { NextRequest } from 'next/server'
 import { mintclub } from 'mint.club-v2-sdk'
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      const { wallets, token, isERC20, amountPerClaim, startTime, endTime } = await req.json()
+      const { wallets, token, isERC20, amountPerClaim, startTime, endTime } =
+        await req.json()
       const formattedWallets = wallets.map((wallet: string) => `0x${wallet}`)
       const json = JSON.stringify(formattedWallets, null, 2)
       const blob = new Blob([json], { type: 'application/json' })
@@ -43,4 +43,3 @@ export async function POST(req: NextRequest, res: NextResponse) {
     res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 }
-*/
