@@ -164,11 +164,15 @@ app.frame('/cast/:hash', async (c) => {
           >
             Awardees!
           </div>
-          {awardees.slice(0, 5).map((awardee, index) => (
-            <div key={index} style={{ marginTop: 20 }}>
-              {`@${awardee.username}`}
-            </div>
-          ))}
+          {awardees.length > 0 ? (
+            awardees.slice(0, 5).map((awardee, index) => (
+              <div key={index} style={{ marginTop: 20 }}>
+                {`@${awardee.username}`}
+              </div>
+            ))
+          ) : (
+            <div>No awardees in this scenario!</div>
+          )}
         </div>
       ),
       intents: [

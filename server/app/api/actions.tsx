@@ -1,6 +1,10 @@
 import { kv } from '@vercel/kv'
 import { DRAW_EXPIRY, Draw } from './types'
-import { checkIfCastExist, getUsersThatMeetCriteria } from './casts'
+import {
+  checkIfCastExist,
+  getBulkUsers,
+  getUsersThatMeetCriteria,
+} from './casts'
 import { getDateTag } from './utils/getDateTag'
 import { publishReply } from './casts'
 import { neynarSigner } from './neynar'
@@ -103,7 +107,16 @@ export async function closeDraw(drawId: string) {
 
   const frameURL = `${process.env.DEPLOYMENT_BASE_URL}/api/frames/cast/${drawId}`
 
-  const reply = `The draw has been closed. Check the result here.`
+  let users
+  if (awardees.length > 0) {
+    users = await getBulkUsers(awardees)
+  }
+  let reply = 'The draw has been closed. Check the result here.'
+  if (users) {
+    for (let user of users) {
+      reply += `\n@${user.username}`
+    }
+  }
 
   await publishReply(
     `Reply to @${draw.author}`,
