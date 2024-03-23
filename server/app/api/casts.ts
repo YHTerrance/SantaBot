@@ -1,4 +1,7 @@
-import { EmbeddedCast } from '@neynar/nodejs-sdk/build/neynar-api/v2'
+import {
+  EmbeddedCast,
+  CastParamType,
+} from '@neynar/nodejs-sdk/build/neynar-api/v2'
 import { neynarClient, neynarSigner } from './neynar'
 import { getDateTag } from './utils/getDateTag'
 
@@ -64,11 +67,13 @@ const publishReply = async (
     options.embeds = [{ url: imageUrl }]
   }
 
-  const replyCast = await neynarClient.publishCast(
-    signer,
-    formattedReply,
-    options
-  )
+  let replyCast
+  try {
+    replyCast = await neynarClient.publishCast(signer, formattedReply, options)
+  } catch (e) {
+    console.error(`Failed to publish reply: ${e}`)
+    return null
+  }
 
   if (formattedChainedReply) {
     await neynarClient.publishCast(signer, formattedChainedReply, {
@@ -81,6 +86,24 @@ const publishReply = async (
   )
 
   return replyCast
+}
+
+export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
+  const castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
+    cast,
+    CastParamType.Hash
+  )
+
+  const likedFids = castData.cast.reactions.likes.map((like) => like.fid)
+  const recastFids = castData.cast.reactions.recasts.map((recast) => recast.fid)
+
+  if (criteria === 'like') {
+    return likedFids
+  } else if (criteria === 'recast') {
+    return recastFids
+  } else if (criteria === 'like and recast') {
+    return likedFids.filter((fid) => recastFids.includes(fid))
+  }
 }
 
 export { getCastsInThread, publishCast, publishReply }
