@@ -1,13 +1,14 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiResponse } from 'next'
+import { NextRequest } from 'next/server'
 import { mintclub } from 'mint.club-v2-sdk'
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST(req: NextRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       // TODO: get awardees from neynar
 
       const { wallets, token, isERC20, amountPerClaim, startTime, endTime } =
-        req.body
+        await req.json()
       const formattedWallets = wallets.map((wallet: string) => `0x${wallet}`)
       const json = JSON.stringify(formattedWallets, null, 2)
       const blob = new Blob([json], { type: 'application/json' })
@@ -31,7 +32,7 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
           merkleRoot,
           ipfsCID,
         })
-
+      
       res.status(200).json({ success: true, airdropResponse })
     } catch (error) {
       res.status(500).json({
