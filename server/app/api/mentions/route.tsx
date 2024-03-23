@@ -141,7 +141,7 @@ export async function POST(request: Request) {
 
     const reply = `🎁 🎁 Successfully received response and generated draw.`
 
-    publishReply(
+    await publishReply(
       `Reply to @${author}`,
       castHash,
       reply,
