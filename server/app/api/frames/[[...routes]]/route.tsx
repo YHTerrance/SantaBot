@@ -78,7 +78,7 @@ app.frame('/cast/:hash', async (c) => {
     console.log(`cast/${hash}/`, usersThatMeetCriteria)
 
     const title = `${draw.total_award} ${draw.token} for ${draw.total_awardees} participant(s)`
-    const howTo = `${draw.criteria} the original cast to participate in the draw`
+    const howTo = `${draw.criteria.toUpperCase()} to participate!`
     const beforeDeadline = `Ends by ${draw.deadline}`
 
     return c.res({
