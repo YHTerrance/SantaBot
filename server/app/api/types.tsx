@@ -11,4 +11,6 @@ export type Draw = {
   status: number
 }
 
+export type User = {}
+
 export const DRAW_EXPIRY = 60 * 60 * 24 * 180 // Expire draw after 3 months
