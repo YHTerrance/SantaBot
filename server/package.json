@@ -15,6 +15,7 @@
     "@vercel/kv": "^1.0.1",
     "frog": "latest",
     "hono": "^4",
+    "mint.club-v2-sdk": "^0.0.84",
     "next": "14.1.0",
     "openai": "^4.0.0",
     "prettier": "^3.2.5",
