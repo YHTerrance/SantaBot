@@ -1,12 +1,17 @@
 /** @jsxImportSource frog/jsx */
 
 import { kv } from '@vercel/kv'
+
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { neynar as neynarHub } from 'frog/hubs'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { getBulkUsers, getUsersThatMeetCriteria } from '../../casts'
+import {
+  getBulkUsers,
+  getUsersThatMeetCriteria,
+  checkIfCastExist,
+} from '../../casts'
 import { Draw } from '../../types'
 import { closeDraw } from '../../actions'
 
@@ -24,10 +29,8 @@ app.frame('/cast/:hash', async (c) => {
   const { status, frameData } = c
 
   // Fid and username of interactor
-  const fid = frameData?.fid || 0
-  console.log('fid:', fid)
-
-  const username = fid > 0 ? (await getBulkUsers([fid]))[0].username : ''
+  const fid = frameData?.fid
+  console.log('view draw fid:', fid)
 
   const hash = c.req.param('hash')
   console.log('Draw id:', hash)
@@ -45,10 +48,15 @@ app.frame('/cast/:hash', async (c) => {
   }
 
   // Draw is open!
-  if (draw?.status === 0) {
+  if (Number(draw?.status) === 0) {
     // Check if user meets the criteria specified in the draw
     let usersThatMeetCriteria: any[] = []
-    if (status == 'response' && fid && draw?.criteria && fid) {
+
+    if (draw && !(await checkIfCastExist(draw?.id))) {
+      console.error(`/cast/:hash: Cast ${draw?.id} does not exist`)
+    }
+
+    if (status == 'response' && fid && draw?.criteria) {
       usersThatMeetCriteria =
         (await getUsersThatMeetCriteria(draw.criteria, hash)) || []
       console.log(usersThatMeetCriteria)
@@ -81,7 +89,6 @@ app.frame('/cast/:hash', async (c) => {
           >
             <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
           </svg>
-          {/* Initial State */}
           {status === 'initial' ? (
             <div
               style={{
@@ -115,7 +122,7 @@ app.frame('/cast/:hash', async (c) => {
         </div>
       ),
       intents:
-        status === 'response' && username !== draw?.author
+        status === 'response' && fid !== Number(draw?.author_fid)
           ? [<Button.Reset>Reset</Button.Reset>]
           : status === 'response'
             ? [
@@ -128,8 +135,11 @@ app.frame('/cast/:hash', async (c) => {
     })
   } else {
     // Draw is closed!
-    const awardees = await getBulkUsers(draw?.awardees || [])
-    // const awardees = await getBulkUsers([238954, 373, 21071])
+    let awardees: any[] = []
+    console.log('awardees', awardees)
+    if (draw?.awardees && draw?.awardees.length > 0) {
+      awardees = await getBulkUsers(draw?.awardees)
+    }
 
     return c.res({
       image: (
@@ -172,12 +182,11 @@ app.frame('/cast/:hash', async (c) => {
 
 app.frame('/close', async (c) => {
   const { buttonValue, frameData } = c
-  console.log('closing', buttonValue)
+
+  console.log('/close', buttonValue)
 
   // Fid and username of interactor
-  const fid = frameData?.fid || 0
-  console.log('fid:', fid)
-  const username = fid > 0 ? (await getBulkUsers([fid]))[0].username : ''
+  const fid = frameData?.fid
 
   let draw: Draw | undefined
   try {
@@ -187,7 +196,7 @@ app.frame('/close', async (c) => {
     console.error(error)
   }
 
-  const isAuthor = username === draw?.author
+  const isAuthor = fid === Number(draw?.author_fid)
   if (isAuthor && buttonValue) {
     closeDraw(buttonValue)
   }
@@ -210,7 +219,7 @@ app.frame('/close', async (c) => {
         {isAuthor ? 'Successfully closed draw!' : 'You are not the author!'}
       </div>
     ),
-    intents: [<Button action={`/cast/${buttonValue}`}>Next</Button>],
+    intents: [],
   })
 })
 

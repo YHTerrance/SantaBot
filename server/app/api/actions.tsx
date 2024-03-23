@@ -1,5 +1,6 @@
 import { kv } from '@vercel/kv'
 import { DRAW_EXPIRY, Draw } from './types'
+import { checkIfCastExist, getUsersThatMeetCriteria } from './casts'
 import { getDateTag } from './utils/getDateTag'
 
 export async function saveDraw(draw: Draw) {
@@ -27,6 +28,67 @@ export async function getDrawById(drawId: string): Promise<Draw | null> {
 }
 
 export async function closeDraw(drawId: string) {
+  if (typeof drawId !== 'string') {
+    console.error(`Invalid drawId type: ${typeof drawId}`)
+    return
+  }
+  let candidates
+  let draw
+  try {
+    draw = await getDrawById(drawId)
+    if (!draw) {
+      throw new Error(`Draw ${drawId} not found`)
+    }
+  } catch (error) {
+    console.error(`Error retrieving draw ${drawId}:`, error)
+    return // Skip to the next drawId in the loop if an error occurs
+  }
+
+  // if draw already closed, skip
+  if (Number(draw.status) === 1) {
+    console.log(`Draw ${drawId} already closed`)
+    return
+  }
+
+  if (await checkIfCastExist(drawId)) {
+    candidates = await getUsersThatMeetCriteria(draw.criteria, drawId)
+  } else {
+    console.error(`Cast ${drawId} not found`)
+    // the cast has been deleted on the platform, delete the draw in kv
+    deleteDrawById(drawId)
+    return // Skip to the next drawId in the loop if the cast is not found
+  }
+
+  console.log(`Retrieved ${candidates.length} candidates for draw ${drawId}`)
+
+  // Randomly select awardees from the candidates
+  const awardees = []
+  const totalAwardees = draw.total_awardees
+  for (let i = 0; i < totalAwardees; i++) {
+    if (candidates.length === 0) {
+      break // No more candidates to select
+    }
+    const randomIndex = Math.floor(Math.random() * candidates.length)
+
+    if (!draw.awardees.includes(candidates[randomIndex])) {
+      awardees.push(candidates[randomIndex])
+    } else {
+      console.log(`Candidate ${candidates[randomIndex]} already selected`)
+    }
+
+    candidates.splice(randomIndex, 1) // Remove the selected candidate
+  }
+
+  console.log(`Awardees for draw ${drawId}:`, awardees)
+  // Save the draw with the updated status
+  draw.awardees = awardees
+  try {
+    await saveDraw(draw)
+  } catch (error) {
+    console.error(`Failed to save draw ${drawId}:`, error)
+    return // Skip to the next drawId in the loop if an error occurs
+  }
+
   const status = await kv.hget(`draw:${drawId}`, 'status')
   if (status === 0) {
     await kv.hincrby(`draw:${drawId}`, 'status', 1)

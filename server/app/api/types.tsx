@@ -8,6 +8,7 @@ export type Draw = {
   total_award: number
   awardees: number[]
   author: string
+  author_fid: number
   status: number
 }
 
