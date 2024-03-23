@@ -86,17 +86,22 @@ const publishReply = async (
   return replyCast
 }
 
-export async function checkUserMeetCriteria(
-  fid: number,
-  criteria: string,
-  cast: string
-) {
+export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
   const castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
     cast,
     CastParamType.Hash
   )
 
-  console.log('castData', castData)
+  const likedFids = castData.cast.reactions.likes.map((like) => like.fid)
+  const recastFids = castData.cast.reactions.recasts.map((recast) => recast.fid)
+
+  if (criteria === 'like') {
+    return likedFids
+  } else if (criteria === 'recast') {
+    return recastFids
+  } else if (criteria === 'like and recast') {
+    return likedFids.filter((fid) => recastFids.includes(fid))
+  }
 }
 
 export { getCastsInThread, publishCast, publishReply }

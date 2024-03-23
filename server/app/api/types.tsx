@@ -6,7 +6,7 @@ export type Draw = {
   total_awardees: number
   token: string
   total_award: number
-  awardees: string[]
+  awardees: number[]
   author: string
   status: number
 }

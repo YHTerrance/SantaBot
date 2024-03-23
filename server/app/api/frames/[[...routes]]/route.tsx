@@ -7,7 +7,7 @@ import { neynar as neynarHub } from 'frog/hubs'
 import { neynar } from 'frog/middlewares'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { checkUserMeetCriteria } from '../../casts'
+import { getUsersThatMeetCriteria } from '../../casts'
 import { Draw } from '../../types'
 
 const app = new Frog({
@@ -22,15 +22,9 @@ const app = new Frog({
 
 app.frame('/cast/:hash', async (c) => {
   const { status, frameData } = c
-  const { castId, fid, messageHash, network, timestamp, url } = frameData
 
-  console.log('status', status)
-  console.log('castId:', castId)
+  const fid = frameData?.fid || 0
   console.log('fid:', fid)
-  console.log('messageHash:', messageHash)
-  console.log('network:', network)
-  console.log('timestamp:', timestamp)
-  console.log('url:', url)
 
   const hash = c.req.param('hash')
   console.log('Draw id:', hash)
@@ -42,17 +36,22 @@ app.frame('/cast/:hash', async (c) => {
   let draw: Draw | undefined
   try {
     draw = (await kv.hgetall(`draw:${hash}`)) as Draw | undefined
+    console.log(draw)
   } catch (error) {
     console.error(error)
   }
 
-  if (draw?.criteria) {
-    checkUserMeetCriteria(fid, draw.criteria, hash)
+  // Check if user meets the criteria specified in the draw
+  let usersThatMeetCriteria: any[] = []
+  if (status == 'response' && fid && draw?.criteria && fid) {
+    usersThatMeetCriteria =
+      (await getUsersThatMeetCriteria(draw.criteria, hash)) || []
+    console.log(usersThatMeetCriteria)
   }
 
   const title = `${draw?.total_award} ${draw?.token} x ${draw?.total_awardees}`
-  const howTo = `${draw?.criteria}`
-  const beforeDeadline = `Before ${draw?.deadline}`
+  const howTo = `${draw?.criteria} the original cast to participate in the draw`
+  const beforeDeadline = `Ends by ${draw?.deadline}`
 
   return c.res({
     image: (
@@ -89,8 +88,37 @@ app.frame('/cast/:hash', async (c) => {
             <div style={{ marginTop: 20 }}>{howTo}</div>
             <div style={{ marginTop: 20 }}>{beforeDeadline}</div>
           </div>
+        ) : Number(draw?.status) === 0 ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ marginTop: 40, fontSize: 48 }}>
+              {usersThatMeetCriteria.includes(fid)
+                ? 'You meet the criteria!'
+                : 'You do not meet the criteria.'}
+            </div>
+            <div style={{ marginTop: 20 }}>
+              {`Total users in draw: ${usersThatMeetCriteria.length}`}
+            </div>
+          </div>
         ) : (
-          <div>Your status will be showed here!</div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ marginTop: 40, fontSize: 48 }}>
+              {draw?.awardees.includes(fid)
+                ? 'Congratulations! Contact the organizer to claim your reward!'
+                : 'You are not selected for the reward. Try again next time!'}
+            </div>
+          </div>
         )}
       </div>
     ),
