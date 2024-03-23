@@ -4,11 +4,11 @@ import { kv } from '@vercel/kv'
 import { Button, Frog, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 import { neynar as neynarHub } from 'frog/hubs'
-import { neynar } from 'frog/middlewares'
 import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
-import { getUsersThatMeetCriteria } from '../../casts'
+import { getBulkUsers, getUsersThatMeetCriteria } from '../../casts'
 import { Draw } from '../../types'
+import { closeDraw } from '../../actions'
 
 const app = new Frog({
   assetsPath: '/',
@@ -23,8 +23,11 @@ const app = new Frog({
 app.frame('/cast/:hash', async (c) => {
   const { status, frameData } = c
 
+  // Fid and username of interactor
   const fid = frameData?.fid || 0
   console.log('fid:', fid)
+
+  const username = fid > 0 ? (await getBulkUsers([fid]))[0].username : ''
 
   const hash = c.req.param('hash')
   console.log('Draw id:', hash)
@@ -41,17 +44,153 @@ app.frame('/cast/:hash', async (c) => {
     console.error(error)
   }
 
-  // Check if user meets the criteria specified in the draw
-  let usersThatMeetCriteria: any[] = []
-  if (status == 'response' && fid && draw?.criteria && fid) {
-    usersThatMeetCriteria =
-      (await getUsersThatMeetCriteria(draw.criteria, hash)) || []
-    console.log(usersThatMeetCriteria)
+  // Draw is open!
+  if (draw?.status === 0) {
+    // Check if user meets the criteria specified in the draw
+    let usersThatMeetCriteria: any[] = []
+    if (status == 'response' && fid && draw?.criteria && fid) {
+      usersThatMeetCriteria =
+        (await getUsersThatMeetCriteria(draw.criteria, hash)) || []
+      console.log(usersThatMeetCriteria)
+    }
+
+    const title = `${draw?.total_award} ${draw?.token} x ${draw?.total_awardees}`
+    const howTo = `${draw?.criteria} the original cast to participate in the draw`
+    const beforeDeadline = `Ends by ${draw?.deadline}`
+
+    return c.res({
+      image: (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+            fontSize: 32,
+            fontWeight: 600,
+          }}
+        >
+          <svg
+            width="75"
+            viewBox="0 0 75 65"
+            fill="#000"
+            style={{ margin: '0 75px' }}
+          >
+            <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
+          </svg>
+          {/* Initial State */}
+          {status === 'initial' ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ marginTop: 40, fontSize: 48 }}>{title}</div>
+              <div style={{ marginTop: 20 }}>{howTo}</div>
+              <div style={{ marginTop: 20 }}>{beforeDeadline}</div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ marginTop: 40, fontSize: 48 }}>
+                {usersThatMeetCriteria.includes(fid)
+                  ? 'You meet the criteria!'
+                  : 'You do not meet the criteria.'}
+              </div>
+              <div style={{ marginTop: 20 }}>
+                {`Total users in draw: ${usersThatMeetCriteria.length}`}
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+      intents:
+        status === 'response' && username !== draw?.author
+          ? [<Button.Reset>Reset</Button.Reset>]
+          : status === 'response'
+            ? [
+                <Button.Reset>Reset</Button.Reset>,
+                <Button action="/close" value={draw?.id}>
+                  Close Draw
+                </Button>,
+              ]
+            : [<Button value="check">Check Status</Button>],
+    })
+  } else {
+    // Draw is closed!
+    const awardees = await getBulkUsers(draw?.awardees || [])
+    // const awardees = await getBulkUsers([238954, 373, 21071])
+
+    return c.res({
+      image: (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+            fontSize: 48,
+            fontWeight: 600,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 56,
+              fontWeight: 800,
+            }}
+          >
+            Awardees!
+          </div>
+          {awardees.slice(0, 5).map((awardee, index) => (
+            <div key={index} style={{ marginTop: 20 }}>
+              {`@${awardee.username}`}
+            </div>
+          ))}
+        </div>
+      ),
+      intents: [
+        <Button.Link href="https://mint.club/airdrops">
+          Claim Airdrop
+        </Button.Link>,
+      ],
+    })
+  }
+})
+
+app.frame('/close', async (c) => {
+  const { buttonValue, frameData } = c
+  console.log('closing', buttonValue)
+
+  // Fid and username of interactor
+  const fid = frameData?.fid || 0
+  console.log('fid:', fid)
+  const username = fid > 0 ? (await getBulkUsers([fid]))[0].username : ''
+
+  let draw: Draw | undefined
+  try {
+    draw = (await kv.hgetall(`draw:${buttonValue}`)) as Draw | undefined
+    console.log(draw)
+  } catch (error) {
+    console.error(error)
   }
 
-  const title = `${draw?.total_award} ${draw?.token} x ${draw?.total_awardees}`
-  const howTo = `${draw?.criteria} the original cast to participate in the draw`
-  const beforeDeadline = `Ends by ${draw?.deadline}`
+  const isAuthor = username === draw?.author
+  if (isAuthor && buttonValue) {
+    closeDraw(buttonValue)
+  }
 
   return c.res({
     image: (
@@ -64,71 +203,14 @@ app.frame('/cast/:hash', async (c) => {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#fff',
-          fontSize: 32,
+          fontSize: 48,
           fontWeight: 600,
         }}
       >
-        <svg
-          width="75"
-          viewBox="0 0 75 65"
-          fill="#000"
-          style={{ margin: '0 75px' }}
-        >
-          <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
-        </svg>
-        {status === 'initial' ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ marginTop: 40, fontSize: 48 }}>{title}</div>
-            <div style={{ marginTop: 20 }}>{howTo}</div>
-            <div style={{ marginTop: 20 }}>{beforeDeadline}</div>
-          </div>
-        ) : Number(draw?.status) === 0 ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ marginTop: 40, fontSize: 48 }}>
-              {usersThatMeetCriteria.includes(fid)
-                ? 'You meet the criteria!'
-                : 'You do not meet the criteria.'}
-            </div>
-            <div style={{ marginTop: 20 }}>
-              {`Total users in draw: ${usersThatMeetCriteria.length}`}
-            </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ marginTop: 40, fontSize: 48 }}>
-              {draw?.awardees.includes(fid)
-                ? 'Congratulations! Contact the organizer to claim your reward!'
-                : 'You are not selected for the reward. Try again next time!'}
-            </div>
-          </div>
-        )}
+        {isAuthor ? 'Successfully closed draw!' : 'You are not the author!'}
       </div>
     ),
-    intents: [
-      status === 'response' ? (
-        <Button.Reset>Reset</Button.Reset>
-      ) : (
-        <Button value="check">Check Status</Button>
-      ),
-    ],
+    intents: [<Button action={`/cast/${buttonValue}`}>Next</Button>],
   })
 })
 

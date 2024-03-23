@@ -88,7 +88,7 @@ const publishReply = async (
   return replyCast
 }
 
-export async function checkIfCastExist(cast: string) {
+const checkIfCastExist = async (cast: string) => {
   try {
     await neynarClient.lookUpCastByHashOrWarpcastUrl(cast, CastParamType.Hash)
   } catch (error) {
@@ -97,7 +97,7 @@ export async function checkIfCastExist(cast: string) {
   return true
 }
 
-export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
+const getUsersThatMeetCriteria = async (criteria: string, cast: string) => {
   let castData
   try {
     castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
@@ -123,4 +123,17 @@ export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
   }
 }
 
-export { getCastsInThread, publishCast, publishReply }
+const getBulkUsers = async (users: number[]) => {
+  const bulkUsers = await neynarClient.fetchBulkUsers(users)
+  console.log(bulkUsers.users)
+  return bulkUsers.users
+}
+
+export {
+  getCastsInThread,
+  publishCast,
+  publishReply,
+  getUsersThatMeetCriteria,
+  getBulkUsers,
+  checkIfCastExist,
+}
