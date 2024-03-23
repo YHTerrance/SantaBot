@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, res: NextApiResponse) {
           merkleRoot,
           ipfsCID,
         })
-      
+
       res.status(200).json({ success: true, airdropResponse })
     } catch (error) {
       res.status(500).json({

@@ -27,6 +27,7 @@ export async function POST(request: Request) {
 
     const castHash = req.data.hash
     const author = req.data.author.username
+    const authorFid = req.data.author.fid
     const text = req.data.text
     const timestamp = req.data.timestamp
 
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
         total_award: parsedResponseObj.total_award,
         awardees: [],
         author: author,
+        author_fid: authorFid,
         status: 0, // 0: "open", 1: "closed"
       }
 
