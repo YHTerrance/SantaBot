@@ -1,8 +1,5 @@
 import { kv } from '@vercel/kv'
-import { getDrawById, saveDraw, closeDraw, deleteDrawById } from '../actions'
-import { checkIfCastExist, getUsersThatMeetCriteria } from '../casts'
-import { publishReply } from '../casts'
-import { neynarSigner } from '../neynar'
+import { closeDraw } from '../actions'
 
 export async function POST(request: Request) {
   if (request.method !== 'POST') {
@@ -26,26 +23,6 @@ export async function POST(request: Request) {
   for (const drawId of drawsIdToUpdate) {
     await closeDraw(drawId)
     updatedCount++
-
-    // cast the result
-    const baseURL = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `https://santa-bot-ten.vercel.app`
-
-    const frameURL = `${baseURL}/api/frames/cast/${drawId}`
-
-    const reply = `The draw has been closed. Check the result here.`
-
-    await publishReply(
-      `Reply to @${draw.author}`,
-      drawId,
-      reply,
-      frameURL,
-      undefined,
-      neynarSigner
-    )
-
-    console.log(`Draw ${drawId} published successfully`)
   }
   return new Response(`Updated ${updatedCount} draws`, { status: 200 })
 }
