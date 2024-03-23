@@ -97,7 +97,14 @@ const checkIfCastExist = async (cast: string) => {
   return true
 }
 
-const getUsersThatMeetCriteria = async (criteria: string, cast: string) => {
+const getUsersThatMeetCriteria = async (
+  criteria: string | null,
+  cast: string
+) => {
+  if (!criteria) {
+    console.error('getUsersThatMeetCriteria(): Criteria not found')
+  }
+
   let castData
   try {
     castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
@@ -125,7 +132,6 @@ const getUsersThatMeetCriteria = async (criteria: string, cast: string) => {
 
 const getBulkUsers = async (users: number[]) => {
   const bulkUsers = await neynarClient.fetchBulkUsers(users)
-  console.log(bulkUsers.users)
   return bulkUsers.users
 }
 

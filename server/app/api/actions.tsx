@@ -22,10 +22,18 @@ export async function saveDraw(draw: Draw) {
 export async function getDrawById(drawId: string): Promise<Draw | null> {
   try {
     const drawData = await kv.hgetall(`draw:${drawId}`)
+
     if (!drawData || Object.keys(drawData).length === 0) {
-      console.error(`Draw with ID ${drawId} not found.`)
+      console.error(`getDrawById(): Draw with ID ${drawId} not found in kv`)
       return null
     }
+
+    if (!(await checkIfCastExist(drawId))) {
+      console.error(`getDrawById(): Cast ${drawId} does not exist on Farcaster`)
+      await deleteDrawById(drawId)
+      return null
+    }
+
     return drawData as Draw
   } catch (error) {
     console.error(`Error retrieving draw with ID ${drawId}:`, error)
@@ -68,7 +76,7 @@ export async function closeDraw(drawId: string) {
   console.log(`Retrieved ${candidates.length} candidates for draw ${drawId}`)
 
   // Randomly select awardees from the candidates
-  const awardees = []
+  const awardees: any[] = []
   const totalAwardees = draw.total_awardees
   for (let i = 0; i < totalAwardees; i++) {
     if (candidates.length === 0) {
@@ -76,12 +84,11 @@ export async function closeDraw(drawId: string) {
     }
     const randomIndex = Math.floor(Math.random() * candidates.length)
 
-    if (!draw.awardees.includes(candidates[randomIndex])) {
+    if (!awardees.includes(candidates[randomIndex])) {
       awardees.push(candidates[randomIndex])
     } else {
       console.log(`Candidate ${candidates[randomIndex]} already selected`)
     }
-
     candidates.splice(randomIndex, 1) // Remove the selected candidate
   }
 
