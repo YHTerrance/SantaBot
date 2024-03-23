@@ -124,7 +124,10 @@ export async function POST(request: Request) {
       console.log('Draw saved:', draw)
     }
 
-    const reply = `🎁 🎁 Successfully received response and generated draw.`
+    const baseURL = `${process.env.VERCEL_URL || process.env.NGROK_URL}/api`
+    const frameURL = `${baseURL}/frames/cast/${castHash}`
+
+    const reply = `🎁 🎁 Successfully received response and generated draw.\n${frameURL}`
 
     publishReply(
       `Reply to @${author}`,
@@ -134,7 +137,6 @@ export async function POST(request: Request) {
       undefined,
       neynarSigner
     )
-
     return new Response('Successfully received response and generated reply', {
       status: 200,
     })
