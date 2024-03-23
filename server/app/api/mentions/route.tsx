@@ -124,16 +124,16 @@ export async function POST(request: Request) {
       console.log('Draw saved:', draw)
     }
 
-    const baseURL = `${process.env.VERCEL_URL || process.env.NGROK_URL}/api`
+    const baseURL = `${process.env.VERCEL_URL || 'https://santa-bot-ten.vercel.app'}/api`
     const frameURL = `${baseURL}/frames/cast/${castHash}`
 
-    const reply = `🎁 🎁 Successfully received response and generated draw.\n${frameURL}`
+    const reply = `🎁 🎁 Successfully received response and generated draw.`
 
     publishReply(
       `Reply to @${author}`,
       castHash,
       reply,
-      undefined,
+      frameURL,
       undefined,
       neynarSigner
     )

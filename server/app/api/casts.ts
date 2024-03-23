@@ -67,11 +67,13 @@ const publishReply = async (
     options.embeds = [{ url: imageUrl }]
   }
 
-  const replyCast = await neynarClient.publishCast(
-    signer,
-    formattedReply,
-    options
-  )
+  let replyCast
+  try {
+    replyCast = await neynarClient.publishCast(signer, formattedReply, options)
+  } catch (e) {
+    console.error(`Failed to publish reply: ${e}`)
+    return null
+  }
 
   if (formattedChainedReply) {
     await neynarClient.publishCast(signer, formattedChainedReply, {
