@@ -2,6 +2,8 @@ import { kv } from '@vercel/kv'
 import { DRAW_EXPIRY, Draw } from './types'
 import { checkIfCastExist, getUsersThatMeetCriteria } from './casts'
 import { getDateTag } from './utils/getDateTag'
+import { publishReply } from './casts'
+import { neynarSigner } from './neynar'
 
 export async function saveDraw(draw: Draw) {
   await kv.hset(`draw:${draw.id}`, draw)
@@ -96,6 +98,26 @@ export async function closeDraw(drawId: string) {
   } else {
     console.error(`Draw ${drawId} already closed`)
   }
+
+  // cast the result
+  const baseURL = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : `https://santa-bot-ten.vercel.app`
+
+  const frameURL = `${baseURL}/api/frames/cast/${drawId}`
+
+  const reply = `The draw has been closed. Check the result here.`
+
+  await publishReply(
+    `Reply to @${draw.author}`,
+    drawId,
+    reply,
+    frameURL,
+    undefined,
+    neynarSigner
+  )
+
+  console.log(`Draw ${drawId} published successfully`)
 }
 
 export async function deleteDrawById(drawId: string) {
