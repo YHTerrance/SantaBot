@@ -135,11 +135,7 @@ export async function POST(request: Request) {
       console.log('Draw saved:', draw)
     }
 
-    const baseURL = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : `https://santa-bot-ten.vercel.app`
-
-    const frameURL = `${baseURL}/api/frames/cast/${castHash}`
+    const frameURL = `${process.env.DEPLOYMENT_BASE_URL}/api/frames/cast/${castHash}`
 
     const reply = `🎁 🎁 Successfully received response and generated draw.`
 

@@ -100,11 +100,8 @@ export async function closeDraw(drawId: string) {
   }
 
   // cast the result
-  const baseURL = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : `https://santa-bot-ten.vercel.app`
 
-  const frameURL = `${baseURL}/api/frames/cast/${drawId}`
+  const frameURL = `${process.env.DEPLOYMENT_BASE_URL}/api/frames/cast/${drawId}`
 
   const reply = `The draw has been closed. Check the result here.`
 
