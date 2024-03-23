@@ -23,21 +23,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const res = await request.json()
+    const req = await request.json()
 
-    const castHash = res.data.hash
-    const author = res.data.author.username
-    const authorFid = res.data.author.fid
-    const text = res.data.text
-    const timestamp = res.data.timestamp
+    const castHash = req.data.hash
+    const author = req.data.author.username
+    const authorFid = req.data.author.fid
+    const text = req.data.text
+    const timestamp = req.data.timestamp
 
     if (processedRequests.has(castHash)) {
       console.log('Request already processed')
       return new Response('Request already processed', { status: 200 })
     }
 
-    console.log('Processing mention:', res)
-    processedRequests.add(res.data.hash)
+    console.log('Processing mention:', req)
+    processedRequests.add(req.data.hash)
 
     // parse the user input with GPT
     const parsedResponse = await parseUserInputWithGPT(text)
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
 
     const reply = `🎁 🎁 Successfully received response and generated draw.`
 
-    publishReply(
+    await publishReply(
       `Reply to @${author}`,
       castHash,
       reply,
