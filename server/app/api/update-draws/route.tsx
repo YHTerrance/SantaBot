@@ -1,10 +1,5 @@
 import { kv } from '@vercel/kv'
-import {
-  getDrawById,
-  saveDraw,
-  closeDraw,
-  deleteDrawById,
-} from '../actions'
+import { getDrawById, saveDraw, closeDraw, deleteDrawById } from '../actions'
 import { checkIfCastExist, getUsersThatMeetCriteria } from '../casts'
 
 export async function POST(request: Request) {
@@ -18,8 +13,8 @@ export async function POST(request: Request) {
 
   try {
     // TODO: this is for production: drawsIdToUpdate = await kv.zrange('polls_by_date', currentTime, -1)
-    const drawIds  = await kv.keys('draw:*')
-    drawsIdToUpdate= drawIds.map(id => id.split('draw:')[1]);
+    const drawIds = await kv.keys('draw:*')
+    drawsIdToUpdate = drawIds.map((id) => id.split('draw:')[1])
     console.log(`Retrieved draws to update: ${drawsIdToUpdate}`)
   } catch (error) {
     console.error('Failed to retrieve draws to update:', error)

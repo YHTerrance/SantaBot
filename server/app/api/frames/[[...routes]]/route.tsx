@@ -8,6 +8,7 @@ import { handle } from 'frog/next'
 import { serveStatic } from 'frog/serve-static'
 import { getBulkUsers, getUsersThatMeetCriteria } from '../../casts'
 import { Draw } from '../../types'
+import { closeDraw } from '../../actions'
 
 const app = new Frog({
   assetsPath: '/',
@@ -114,14 +115,14 @@ app.frame('/cast/:hash', async (c) => {
         </div>
       ),
       intents:
-        status === 'response' && username === draw?.author
+        status === 'response' && username !== draw?.author
           ? [<Button.Reset>Reset</Button.Reset>]
           : status === 'response'
             ? [
+                <Button.Reset>Reset</Button.Reset>,
                 <Button action="/close" value={draw?.id}>
                   Close Draw
                 </Button>,
-                <Button.Reset>Reset</Button.Reset>,
               ]
             : [<Button value="check">Check Status</Button>],
     })
@@ -176,10 +177,20 @@ app.frame('/close', async (c) => {
   // Fid and username of interactor
   const fid = frameData?.fid || 0
   console.log('fid:', fid)
-  // const username = (await getBulkUsers([fid]))[0].username;
+  const username = fid > 0 ? (await getBulkUsers([fid]))[0].username : ''
 
-  // Call close draw function!
-  // Remember to check if he or she is the owner
+  let draw: Draw | undefined
+  try {
+    draw = (await kv.hgetall(`draw:${buttonValue}`)) as Draw | undefined
+    console.log(draw)
+  } catch (error) {
+    console.error(error)
+  }
+
+  const isAuthor = username === draw?.author
+  if (isAuthor && buttonValue) {
+    closeDraw(buttonValue)
+  }
 
   return c.res({
     image: (
@@ -196,7 +207,7 @@ app.frame('/close', async (c) => {
           fontWeight: 600,
         }}
       >
-        Successfully closed draw!
+        {isAuthor ? 'Successfully closed draw!' : 'You are not the author!'}
       </div>
     ),
     intents: [<Button action={`/cast/${buttonValue}`}>Next</Button>],

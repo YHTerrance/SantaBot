@@ -135,5 +135,5 @@ export {
   publishReply,
   getUsersThatMeetCriteria,
   getBulkUsers,
-  checkIfCastExist
+  checkIfCastExist,
 }
