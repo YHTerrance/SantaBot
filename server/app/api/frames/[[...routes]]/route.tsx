@@ -201,9 +201,9 @@ app.frame('/cast/:hash', async (c) => {
         draw.token == 'XDC'
           ? [
               fid !== Number(draw.author_fid) ? (
-                <Button>Create Airdrop</Button>
+                <Button.Link href='https://mint.club/token/base/XD'>Create Airdrop</Button.Link>
               ) : (
-                <Button>Claim Airdrop</Button>
+                <Button.Link href='https://mint.club/token/base/XD'>Claim Airdrop</Button.Link>
               ),
             ]
           : [],
