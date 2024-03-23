@@ -13,7 +13,7 @@ import {
   checkIfCastExist,
 } from '../../casts'
 import { Draw } from '../../types'
-import { closeDraw } from '../../actions'
+import { closeDraw, getDrawById } from '../../actions'
 
 const app = new Frog({
   assetsPath: '/',
@@ -25,70 +25,72 @@ const app = new Frog({
 // Uncomment to use Edge Runtime
 // export const runtime = 'edge'
 
+// Common styles for div containers
+const commonStyle = {
+  height: '100%',
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#FFF9F9',
+}
+
+function getTokenImage(tokenName: string) {
+  const tokenImages: { [key: string]: string } = {
+    USDC: '/usdc-logo.png',
+    XDC: '/xdc-logo.png',
+    // Add more tokens and their image paths as needed
+  }
+  const defaultImage = '/default-token-logo.png' // Path to a default image if token is not found
+  return (
+    <img
+      src={tokenImages[tokenName] || defaultImage}
+      alt={`${tokenName} Logo`}
+      style={{ width: 100, height: 100 }}
+    />
+  )
+}
+
 app.frame('/cast/:hash', async (c) => {
-  const { status, frameData } = c
+  const { status, frameData, buttonValue } = c
 
   // Fid and username of interactor
-  const fid = frameData?.fid
-  console.log('view draw fid:', fid)
-
+  const fid = frameData?.fid || 1
   const hash = c.req.param('hash')
-  console.log('Draw id:', hash)
 
-  // const { displayName, followerCount } = c.var.interactor || {}
-  // console.log('cast:', c.var.cast)
-  // console.log('interactor:', c.var.interactor)
+  // Close draw if the button value is close
+  if (buttonValue === 'close') {
+    await closeDraw(hash)
+  }
 
-  let draw: Draw | undefined
-  try {
-    draw = (await kv.hgetall(`draw:${hash}`)) as Draw | undefined
-    console.log(draw)
-  } catch (error) {
-    console.error(error)
+  const draw = await getDrawById(hash)
+  if (draw == null) {
+    throw new Error('Draw not found')
   }
 
   // Draw is open!
-  if (Number(draw?.status) === 0) {
+  if (Number(draw.status) === 0) {
     // Check if user meets the criteria specified in the draw
-    let usersThatMeetCriteria: any[] = []
+    const usersThatMeetCriteria = await getUsersThatMeetCriteria(
+      draw.criteria,
+      hash
+    )
+    console.log(`cast/${hash}/`, usersThatMeetCriteria)
 
-    if (draw && !(await checkIfCastExist(draw?.id))) {
-      console.error(`/cast/:hash: Cast ${draw?.id} does not exist`)
-    }
-
-    if (status == 'response' && fid && draw?.criteria) {
-      usersThatMeetCriteria =
-        (await getUsersThatMeetCriteria(draw.criteria, hash)) || []
-      console.log(usersThatMeetCriteria)
-    }
-
-    const title = `${draw?.total_award} ${draw?.token} x ${draw?.total_awardees}`
-    const howTo = `${draw?.criteria} the original cast to participate in the draw`
-    const beforeDeadline = `Ends by ${draw?.deadline}`
+    const title = `${draw.total_award} ${draw.token} for ${draw.total_awardees} participant(s)`
+    const howTo = `${draw.criteria} the original cast to participate in the draw`
+    const beforeDeadline = `Ends by ${draw.deadline}`
 
     return c.res({
       image: (
         <div
           style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#fff',
+            ...commonStyle,
             fontSize: 32,
-            fontWeight: 600,
+            fontWeight: 100,
+            flexDirection: 'column',
           }}
         >
-          <svg
-            width="75"
-            viewBox="0 0 75 65"
-            fill="#000"
-            style={{ margin: '0 75px' }}
-          >
-            <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
-          </svg>
           {status === 'initial' ? (
             <div
               style={{
@@ -97,11 +99,18 @@ app.frame('/cast/:hash', async (c) => {
                 alignItems: 'center',
               }}
             >
+              {getTokenImage(draw.token)}
+
               <div style={{ marginTop: 40, fontSize: 48 }}>{title}</div>
-              <div style={{ marginTop: 20 }}>{howTo}</div>
+              <div
+                style={{ display: 'flex', flexDirection: 'row', marginTop: 20 }}
+              >
+                {howTo}
+              </div>
               <div style={{ marginTop: 20 }}>{beforeDeadline}</div>
             </div>
           ) : (
+            // Show user status
             <div
               style={{
                 display: 'flex',
@@ -109,49 +118,41 @@ app.frame('/cast/:hash', async (c) => {
                 alignItems: 'center',
               }}
             >
-              <div style={{ marginTop: 40, fontSize: 48 }}>
+              <div style={{ marginTop: 40, fontSize: 64 }}>
                 {usersThatMeetCriteria.includes(fid)
-                  ? 'You meet the criteria!'
-                  : 'You do not meet the criteria.'}
+                  ? 'You meet the criteria 🎉'
+                  : 'You do not meet the criteria 🥲'}
               </div>
-              <div style={{ marginTop: 20 }}>
-                {`Total users in draw: ${usersThatMeetCriteria.length}`}
+              <div style={{ marginTop: 20, fontSize: 48 }}>
+                {`Total users : ${usersThatMeetCriteria.length}`}
               </div>
             </div>
           )}
         </div>
       ),
       intents:
-        status === 'response' && fid !== Number(draw?.author_fid)
+        status === 'response' && fid !== Number(draw.author_fid)
           ? [<Button.Reset>Reset</Button.Reset>]
           : status === 'response'
             ? [
                 <Button.Reset>Reset</Button.Reset>,
-                <Button action="/close" value={draw?.id}>
-                  Close Draw
-                </Button>,
+                <Button value="close">Close Draw</Button>,
               ]
             : [<Button value="check">Check Status</Button>],
     })
   } else {
     // Draw is closed!
     let awardees: any[] = []
-    console.log('awardees', awardees)
-    if (draw?.awardees && draw?.awardees.length > 0) {
-      awardees = await getBulkUsers(draw?.awardees)
+    if (draw.awardees.length > 0) {
+      awardees = await getBulkUsers(draw.awardees)
     }
 
     return c.res({
       image: (
         <div
           style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
+            ...commonStyle,
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#fff',
             fontSize: 48,
             fontWeight: 600,
           }}
@@ -160,14 +161,35 @@ app.frame('/cast/:hash', async (c) => {
             style={{
               fontSize: 56,
               fontWeight: 800,
+              textDecoration: 'underline',
             }}
           >
             Awardees!
           </div>
           {awardees.length > 0 ? (
             awardees.slice(0, 5).map((awardee, index) => (
-              <div key={index} style={{ marginTop: 20 }}>
-                {`@${awardee.username}`}
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: 20,
+                }}
+              >
+                <img
+                  src={awardee.pfp_url}
+                  alt={`Profile Pic`}
+                  style={{
+                    height: 100,
+                    width: 100,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    marginRight: 20,
+                  }}
+                />
+                <div style={{ fontSize: 56 }}>{`@${awardee.username}`}</div>
               </div>
             ))
           ) : (
@@ -175,56 +197,18 @@ app.frame('/cast/:hash', async (c) => {
           )}
         </div>
       ),
-      intents: [
-        <Button.Link href="https://mint.club/airdrops">
-          Claim Airdrop
-        </Button.Link>,
-      ],
+      intents:
+        draw.token == 'XDC'
+          ? [
+              fid !== Number(draw.author_fid) ? (
+                <Button>Create Airdrop</Button>
+              ) : (
+                <Button>Claim Airdrop</Button>
+              ),
+            ]
+          : [],
     })
   }
-})
-
-app.frame('/close', async (c) => {
-  const { buttonValue, frameData } = c
-
-  console.log('/close', buttonValue)
-
-  // Fid and username of interactor
-  const fid = frameData?.fid
-
-  let draw: Draw | undefined
-  try {
-    draw = (await kv.hgetall(`draw:${buttonValue}`)) as Draw | undefined
-    console.log(draw)
-  } catch (error) {
-    console.error(error)
-  }
-
-  const isAuthor = fid === Number(draw?.author_fid)
-  if (isAuthor && buttonValue) {
-    closeDraw(buttonValue)
-  }
-
-  return c.res({
-    image: (
-      <div
-        style={{
-          height: '100%',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#fff',
-          fontSize: 48,
-          fontWeight: 600,
-        }}
-      >
-        {isAuthor ? 'Successfully closed draw!' : 'You are not the author!'}
-      </div>
-    ),
-    intents: [],
-  })
 })
 
 devtools(app, { serveStatic })

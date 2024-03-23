@@ -1,6 +1,8 @@
+import { get } from 'http'
 import { saveDraw } from '../actions'
 import { publishReply } from '../casts'
 import { neynarClient, neynarSigner } from '../neynar'
+import { getDateTag } from '../utils/getDateTag'
 import { parseUserInputWithGPT } from '../utils/parseUserInputWithGPT'
 
 // Create a cache to store requests in process
@@ -36,12 +38,11 @@ export async function POST(request: Request) {
       return new Response('Request already processed', { status: 200 })
     }
 
-    console.log('Processing mention:', req)
+    console.log(`${getDateTag()} Processing mention by ${author}`)
     processedRequests.add(req.data.hash)
 
     // parse the user input with GPT
     const parsedResponse = await parseUserInputWithGPT(text)
-    console.log(parsedResponse)
 
     if (parsedResponse === null) {
       console.log('Failed to parse response')
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
       return new Response('Internal Server Error', { status: 500 })
     }
 
-    console.log('Parsed response object:', parsedResponseObj)
+    console.log(`${getDateTag()} Parsed response object:`, parsedResponseObj)
 
     const missingOrInvalidFields = []
     if (
@@ -93,9 +94,15 @@ export async function POST(request: Request) {
     ) {
       missingOrInvalidFields.push(`token: ${parsedResponseObj.token}`)
     }
-    console.log('missingOrInvalidFields:', missingOrInvalidFields)
+
     if (missingOrInvalidFields.length > 0) {
+      console.log(
+        `${getDateTag()} missingOrInvalidFields:`,
+        missingOrInvalidFields
+      )
+
       const reply = `The following fields are missing or invalid: ${missingOrInvalidFields.join(', ')}.`
+
       publishReply(
         `Reply to @${author}`,
         castHash,
@@ -104,6 +111,7 @@ export async function POST(request: Request) {
         undefined,
         neynarSigner
       )
+
       return new Response(
         'Missing or invalid fields in response. Reply sent to author.',
         {
@@ -132,11 +140,10 @@ export async function POST(request: Request) {
         console.error('Failed to save draw:', error)
         throw new Error('Failed to save draw')
       }
-      console.log('Draw saved:', draw)
+      console.log(`${getDateTag()} Saved Draw:`, draw.id)
     }
 
     const frameURL = `${process.env.DEPLOYMENT_BASE_URL}/api/frames/cast/${castHash}`
-
     const reply = `🎁 🎁 Successfully received response and generated draw.`
 
     await publishReply(
