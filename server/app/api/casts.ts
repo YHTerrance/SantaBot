@@ -1,4 +1,7 @@
-import { EmbeddedCast } from '@neynar/nodejs-sdk/build/neynar-api/v2'
+import {
+  EmbeddedCast,
+  CastParamType,
+} from '@neynar/nodejs-sdk/build/neynar-api/v2'
 import { neynarClient, neynarSigner } from './neynar'
 import { getDateTag } from './utils/getDateTag'
 
@@ -81,6 +84,19 @@ const publishReply = async (
   )
 
   return replyCast
+}
+
+export async function checkUserMeetCriteria(
+  fid: number,
+  criteria: string,
+  cast: string
+) {
+  const castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
+    cast,
+    CastParamType.Hash
+  )
+
+  console.log('castData', castData)
 }
 
 export { getCastsInThread, publishCast, publishReply }

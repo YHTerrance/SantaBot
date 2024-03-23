@@ -134,7 +134,6 @@ export async function POST(request: Request) {
       undefined,
       neynarSigner
     )
-
     return new Response('Successfully received response and generated reply', {
       status: 200,
     })
