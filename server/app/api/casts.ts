@@ -88,11 +88,26 @@ const publishReply = async (
   return replyCast
 }
 
+export async function checkIfCastExist(cast: string) {
+  try {
+    await neynarClient.lookUpCastByHashOrWarpcastUrl(cast, CastParamType.Hash)
+  } catch (error) {
+    return false
+  }
+  return true
+}
+
 export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
-  const castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
-    cast,
-    CastParamType.Hash
-  )
+  let castData
+  try {
+    castData = await neynarClient.lookUpCastByHashOrWarpcastUrl(
+      cast,
+      CastParamType.Hash
+    )
+  } catch (error) {
+    console.error(`Failed to look up cast by hash: ${error}`)
+    throw error // Rethrow the error to handle it further up the call stack
+  }
 
   const likedFids = castData.cast.reactions.likes.map((like) => like.fid)
   const recastFids = castData.cast.reactions.recasts.map((recast) => recast.fid)
@@ -103,6 +118,8 @@ export async function getUsersThatMeetCriteria(criteria: string, cast: string) {
     return recastFids
   } else if (criteria === 'like and recast') {
     return likedFids.filter((fid) => recastFids.includes(fid))
+  } else {
+    throw new Error('Invalid criteria')
   }
 }
 
