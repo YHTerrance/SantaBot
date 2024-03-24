@@ -4,9 +4,7 @@ import { getDrawById } from '../actions'
 import { getBulkUsers } from '../casts'
 
 // create a 7-day airdrop
-const createAirdrop: TransactionHandler<Env, '/create-airdrop', {}> = async (
-  context
-) => {
+const createAirdrop = async (context: any) => {
   // Fid and username of interactor
   const hash = context.req.param('hash')
 
@@ -49,7 +47,7 @@ const createAirdrop: TransactionHandler<Env, '/create-airdrop', {}> = async (
     merkleRoot,
     ipfsCID,
   ]
-  return {
+  return context.contract({
     abi: MerkleDistributorABI,
     chainId: 'eip155:8453' as
       | 'eip155:8453'
@@ -57,9 +55,9 @@ const createAirdrop: TransactionHandler<Env, '/create-airdrop', {}> = async (
       | 'eip155:84532'
       | 'eip155:7777777',
     functionName: 'createDistribution',
-    args,
+    args: args,
     to: BASE_AIRDROP_FACTORY as `0x${string}`,
-  }
+  })
 }
 
 export { createAirdrop }
