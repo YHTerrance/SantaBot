@@ -1,5 +1,5 @@
 import { MerkleDistributorABI } from './abis/MerkleDistributorABI'
-import { mintclub } from 'mint.club-v2-sdk'
+import { mintclub, wei } from 'mint.club-v2-sdk'
 import { getDrawById } from '../actions'
 import { getBulkUsers } from '../casts'
 
@@ -20,7 +20,7 @@ const createAirdrop = async (context: any) => {
     (user) => user.verified_addresses.eth_addresses[0] as `0x${string}`
   )
 
-  const amountPerClaim = draw.total_award
+  const amountPerClaim = wei(draw.total_award, 18)
 
   const title = `${draw.total_award} ${draw.token} for ${draw.total_awardees} participant(s) in draw ${hash}`
 
