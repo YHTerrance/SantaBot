@@ -14,6 +14,8 @@ import {
 } from '../../casts'
 import { Draw } from '../../types'
 import { closeDraw, getDrawById } from '../../actions'
+import { createAirdrop } from '../../utils/createAirdrop'
+import { title } from 'process'
 
 const app = new Frog({
   assetsPath: '/',
@@ -199,21 +201,26 @@ app.frame('/cast/:hash', async (c) => {
       ),
       intents:
         draw.token == 'XD'
-          ? [
-              fid === Number(draw.author_fid) ? (
-                <Button.Link href="https://mint.club/token/base/XD">
+          ? fid === Number(draw.author_fid)
+            ? [
+                <Button.Transaction target="create-airdrop">
                   Create Airdrop
-                </Button.Link>
-              ) : (
+                </Button.Transaction>,
                 <Button.Link href="https://mint.club/token/base/XD">
                   Claim Airdrop
-                </Button.Link>
-              ),
-            ]
+                </Button.Link>,
+              ]
+            : [
+                <Button.Link href="https://mint.club/token/base/XD">
+                  Claim Airdrop
+                </Button.Link>,
+              ]
           : [],
     })
   }
 })
+// TODO get draw
+app.transaction('/create-airdrop', createAirdrop)
 
 devtools(app, { serveStatic })
 
