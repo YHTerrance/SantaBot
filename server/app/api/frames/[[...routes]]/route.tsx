@@ -201,17 +201,20 @@ app.frame('/cast/:hash', async (c) => {
       ),
       intents:
         draw.token == 'XD'
-          ? [
-              fid !== Number(draw.author_fid) ? (
+          ? fid === Number(draw.author_fid)
+            ? [
                 <Button.Transaction target="create-airdrop">
                   Create Airdrop
-                </Button.Transaction>
-              ) : (
+                </Button.Transaction>,
                 <Button.Link href="https://mint.club/token/base/XD">
                   Claim Airdrop
-                </Button.Link>
-              ),
-            ]
+                </Button.Link>,
+              ]
+            : [
+                <Button.Link href="https://mint.club/token/base/XD">
+                  Claim Airdrop
+                </Button.Link>,
+              ]
           : [],
     })
   }
