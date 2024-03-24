@@ -32,13 +32,13 @@ const commonStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  backgroundColor: '#FFF9F9',
+  backgroundColor: '#FFB6C1',
 }
 
 function getTokenImage(tokenName: string) {
   const tokenImages: { [key: string]: string } = {
     USDC: '/usdc-logo.png',
-    XDC: '/xdc-logo.png',
+    XD: '/xd-logo.png',
     // Add more tokens and their image paths as needed
   }
   const defaultImage = '/default-token-logo.png' // Path to a default image if token is not found
@@ -69,7 +69,7 @@ app.frame('/cast/:hash', async (c) => {
   }
 
   // Draw is open!
-  if (Number(draw.status) === 0) {
+  if (buttonValue != 'close' && Number(draw.status) === 0) {
     // Check if user meets the criteria specified in the draw
     const usersThatMeetCriteria = await getUsersThatMeetCriteria(
       draw.criteria,
@@ -198,12 +198,16 @@ app.frame('/cast/:hash', async (c) => {
         </div>
       ),
       intents:
-        draw.token == 'XDC'
+        draw.token == 'XD'
           ? [
-              fid !== Number(draw.author_fid) ? (
-                <Button.Link href='https://mint.club/token/base/XD'>Create Airdrop</Button.Link>
+              fid === Number(draw.author_fid) ? (
+                <Button.Link href="https://mint.club/token/base/XD">
+                  Create Airdrop
+                </Button.Link>
               ) : (
-                <Button.Link href='https://mint.club/token/base/XD'>Claim Airdrop</Button.Link>
+                <Button.Link href="https://mint.club/token/base/XD">
+                  Claim Airdrop
+                </Button.Link>
               ),
             ]
           : [],
