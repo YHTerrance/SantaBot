@@ -33,7 +33,7 @@ const createAirdrop = async (context: any) => {
   const merkleRoot = await mintclub.utils.generateMerkleRoot(wallets)
 
   const BASE_AIRDROP_FACTORY = '0x1349a9ddee26fe16d0d44e35b3cb9b0ca18213a4'
-  const XD_TOKEN_ADDRESS = 0x022f158545e25a7b91563a0b0a06b9d762ae672b
+  const XD_TOKEN_ADDRESS = '0x022f158545e25a7b91563a0b0a06b9d762ae672b'
   const startTime = Math.floor(Date.now() / 1000)
   const endTime = Math.floor(Date.now() / 1000 + 60 * 60 * 24 * 7)
   const args = [
