@@ -4,13 +4,11 @@ Santa bot is a farcaster bot that encourages the desired kind of engagement of p
 
 ## How to use on Farcaster
 
-Sample cast message to get everything started off
+Sample cast message to get everything started off!
 
-"
-We will hold the XueDAO hackathon in 2024-4-18. To help promote the event,we are giving away 100 XD tokens each to 2 lucky participants who are willing to like our post. Leave a like down below to have a chance of winning the prize!
-
+We will hold the XueDAO hackathon in May. To help promote the event, we are giving away 100 XD tokens each to 2 lucky participants who are willing to like our post. Leave a like down below before 2024-4-25 to have a chance of winning the prize!
+ 
 @santabot
-"
 
 ## Getting Started
 
