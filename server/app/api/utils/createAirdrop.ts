@@ -1,4 +1,4 @@
-import { MerkleDistributorABI } from '../utils/abis/MerkleDistributorABI'
+import { MerkleDistributorABI } from './abis/MerkleDistributorABI'
 import { mintclub } from 'mint.club-v2-sdk'
 import { getDrawById } from '../actions'
 import { getBulkUsers } from '../casts'
