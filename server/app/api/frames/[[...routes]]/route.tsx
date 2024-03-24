@@ -203,7 +203,7 @@ app.frame('/cast/:hash', async (c) => {
         draw.token == 'XD'
           ? fid === Number(draw.author_fid)
             ? [
-                <Button.Transaction target="create-airdrop">
+                <Button.Transaction target="/create-airdrop">
                   Create Airdrop
                 </Button.Transaction>,
                 <Button.Link href="https://mint.club/token/base/XD">

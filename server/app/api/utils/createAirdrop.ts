@@ -20,7 +20,9 @@ const createAirdrop = async (context: any) => {
     (user) => user.verified_addresses.eth_addresses[0] as `0x${string}`
   )
 
+  console.log('amountPerClaim', wei(draw.total_award, 18))
   const amountPerClaim = wei(draw.total_award, 18)
+  
 
   const title = `${draw.total_award} ${draw.token} for ${draw.total_awardees} participant(s) in draw ${hash}`
 
@@ -47,6 +49,7 @@ const createAirdrop = async (context: any) => {
     merkleRoot,
     ipfsCID,
   ]
+  console.log('args', args)
   return context.contract({
     abi: MerkleDistributorABI,
     chainId: 'eip155:8453' as
