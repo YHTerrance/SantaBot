@@ -8,7 +8,7 @@ const parseUserInputWithGPT = async (castContent: string) => {
   const supportedCriteria = ['like', 'recast', 'like and recast']
   const supportedCriteriaText = supportedCriteria.join(', ')
 
-  const supportedAwardTokenTypes = ['USDC', '']
+  const supportedAwardTokenTypes = ['USDC', 'XD']
 
   const systemPrompt = `
 Given a description of a cast, extract and structure the key information into a JSON object format. The information to identify includes the deadline for participation, the criteria required for eligibility, the award offered, the quantity of awards available, the amount of award token, and the type of award token. If any information is missing from the cast description, explicitly state it as 'missing'. Ensure the cast content adheres to the following guidelines:

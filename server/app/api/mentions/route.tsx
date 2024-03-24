@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
       const reply = `The following fields are missing or invalid: ${missingOrInvalidFields.join(', ')}.`
 
-      publishReply(
+      await publishReply(
         `Reply to @${author}`,
         castHash,
         reply,
