@@ -1,8 +1,18 @@
 # Santa Bot
 
-Santa bot is a farcaster bot that encourages engagement of users on casts.
+Santa bot is a farcaster bot that encourages the specified kind of engagement of pariticpants on casts.
 
-## Getting Started (Locally)
+## How to use on Farcaster
+
+Sample cast message to get everything started off
+
+"
+We will hold the XueDAO hackathon in 2024-4-18. To help promote the event,we are giving away 100 XD tokens each to 2 lucky participants who are willing to like our post. Leave a like down below to have a chance of winning the prize!
+
+@santabot
+"
+
+## Getting Started
 
 1. Change directory into `server/`
 
@@ -27,4 +37,3 @@ yarn install
 ```bash
 yarn dev
 ```
-
