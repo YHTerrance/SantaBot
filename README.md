@@ -1,6 +1,6 @@
 # Santa Bot
 
-Santa bot is a farcaster bot that encourages the specified kind of engagement of pariticpants on casts.
+Santa bot is a farcaster bot that encourages the desired kind of engagement of participants on casts.
 
 ## How to use on Farcaster
 
